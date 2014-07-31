@@ -1,6 +1,22 @@
 package com.as.goauth;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.content.IntentSender.SendIntentException;
@@ -13,6 +29,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.auth.UserRecoverableAuthException;
@@ -221,9 +238,45 @@ ConnectionCallbacks, OnConnectionFailedListener, OnClickListener {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			return token;
 			
-		}
+			DefaultHttpClient httpClient = new DefaultHttpClient();
+			HttpPost httpPost = new HttpPost("https://todoed-preseed.rhcloud.com/login");
+			try {
+				
+				List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
+				nameValuePairs.add(new BasicNameValuePair("Token",token));
+				httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+				
+			//	httpPost.setEntity(new StringEntity("https://www.googleapis.com/plus/v1/people/me?key="+token));
+				
+				HttpResponse httpResponse = httpClient.execute(httpPost);
+				HttpEntity httpEntity = httpResponse.getEntity();
+				InputStream is = httpEntity.getContent();
+				
+				BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+	            StringBuilder sb = new StringBuilder();
+	            String line = null;
+	            while ((line = reader.readLine()) != null) {
+	                sb.append(line + "\n");
+	            }
+	            is.close();
+	            String json = sb.toString();
+	            Log.i("JSON", json);
+				
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ClientProtocolException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return token;   
+		  }
+		
+		
 
 		@Override
 		protected void onPostExecute(String result) {
@@ -254,8 +307,11 @@ ConnectionCallbacks, OnConnectionFailedListener, OnClickListener {
 		    		    
 		    proName.setText(personName);
 		    mToken.setText("Token: \n"+token);
-		  }
+		    Log.i("HEY", token);
+		    //new URLShort().execute();
+		}
 	}
+	
 	
 	@Override
 	public void onConnectionSuspended(int arg0) {
